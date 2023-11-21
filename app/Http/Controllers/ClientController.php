@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Jobs\AddRestaurants;
 use App\Models\Client;
 
+/**
+ * API for managing clients and associated restaurants.
+ */
 class ClientController extends Controller
 {
     /**
@@ -33,7 +37,8 @@ class ClientController extends Controller
             'siren' => 'required|string|max:255|unique:clients,siren',
             'contact' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:clients,email',
-            'phone' => 'required|string|max:255'
+            'phone' => 'required|string|max:255',
+            'restaurants' => 'array'
         ]);
 
         // Check if a client with the same SIREN already exists
@@ -50,6 +55,12 @@ class ClientController extends Controller
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
         ]);
+
+        // Use a job to add the restaurants asynchronously
+        if ($request->has('restaurants') && is_array($request->input('restaurants'))) {
+            $uniqueRestaurants = array_unique($request->input('restaurants'), SORT_REGULAR);
+            AddRestaurants::dispatch($client, $uniqueRestaurants);
+        }
 
         return response()->json(['message' => 'Customer added successfully. Restaurants are currently being added.'], 201);
     }
