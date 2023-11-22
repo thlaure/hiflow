@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Client;
 use App\Models\Restaurant;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,6 +42,11 @@ class AddRestaurants implements ShouldQueue
      */
     public function handle(): void
     {
+        Log::info('Job started: AddRestaurants');
+        Log::info('Adding restaurants for client ' . $this->client->name . ' with ID ' . $this->client->id);
+
+        $nbRestaurantsInserted = 0;
+        $nbRestaurantsNotInserted = 0;
         foreach ($this->restaurants as $restaurant) {
             // Check if the restaurant already exists
             $existingRestaurant = Restaurant::where([
@@ -56,7 +62,18 @@ class AddRestaurants implements ShouldQueue
                 $restaurant = new Restaurant($restaurant);
                 $restaurant->client()->associate($this->client);
                 $restaurant->save();
+                
+                $nbRestaurantsInserted++;
+                Log::info('Added restaurant ' . $restaurant->name . ' with ID ' . $restaurant->id);
+            } else {
+                $nbRestaurantsNotInserted++;
+                Log::warning('Restaurant ' . $existingRestaurant->name . ' with ID ' . $existingRestaurant->id . ' already exists');
             }
         }
+
+        Log::info('Added ' . $nbRestaurantsInserted . ' restaurants');
+        Log::info('Skipped ' . $nbRestaurantsNotInserted . ' restaurants');
+        
+        Log::info('Job completed: AddRestaurants');
     }
 }
