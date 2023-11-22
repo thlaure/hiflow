@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Jobs\AddRestaurants;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
  * API for managing clients and associated restaurants.
@@ -55,14 +56,7 @@ class ClientController extends Controller
             }
 
             // Create a new Client
-            $name = $request->input('name');
-            $client = Client::create([
-                'name' => $name,
-                'siren' => $siren,
-                'contact' => $request->input('contact'),
-                'email' => $request->input('email'),
-                'phone' => $request->input('phone'),
-            ]);
+            $client = $this->createClient($request->all());
 
             if (!$client) {
                 Log::error('Error creating client with SIREN ' . $siren);
@@ -71,16 +65,53 @@ class ClientController extends Controller
 
             // Use a job to add the restaurants asynchronously
             if ($request->has('restaurants') && is_array($request->input('restaurants')) && count($request->input('restaurants')) > 0) {
-                $uniqueRestaurants = array_unique($request->input('restaurants'), SORT_REGULAR);
-                AddRestaurants::dispatch($client, $uniqueRestaurants);
+                $restaurants = $request->input('restaurants');
+                $this->addRestaurants($restaurants, $client);
             }
 
+            $name = $client->name;
             Log::info("Customer $name with SIREN $siren added successfully.");
             
             return response()->json(['message' => "Customer $name with SIREN $siren added successfully. Restaurants are currently being added."], 201);
+        } catch (ValidationException $e) {
+            Log::error($e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Add restaurants to a client.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * 
+     * @return void
+     */
+    private function addRestaurants(array $restaurants, Client $client): void
+    {
+        if (is_array($restaurants) && count($restaurants) > 0) {
+            $uniqueRestaurants = array_unique($restaurants, SORT_REGULAR);
+            AddRestaurants::dispatch($client, $uniqueRestaurants);
+        }
+    }
+
+    /**
+     * Create a new client.
+     *
+     * @param  array $data
+     * 
+     * @return \App\Models\Client
+     */
+    private function createClient(array $data): Client
+    {
+        return Client::create([
+            'name' => $data['name'],
+            'siren' => $data['siren'],
+            'contact' => $data['contact'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+        ]);
     }
 }

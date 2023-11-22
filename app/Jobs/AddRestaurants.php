@@ -36,6 +36,26 @@ class AddRestaurants implements ShouldQueue
     }
 
     /**
+     * Get the client associated with the job.
+     *
+     * @return \App\Client
+     */
+    public function getClient(): Client
+    {
+        return $this->client;
+    }
+
+    /**
+     * Get the array of restaurant data.
+     *
+     * @return array
+     */
+    public function getRestaurants(): array
+    {
+        return $this->restaurants;
+    }
+
+    /**
      * Execute the job.
      *
      * @return void
