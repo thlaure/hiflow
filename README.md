@@ -1,66 +1,62 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Test technique back-end Hiflow
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Objectif
+Développement d'une petite API REST pour enregistrer un client ainsi que ses restaurants.
 
-## About Laravel
+## Fonctionnalités
+L'API doit fournir un unique point d'accès permettant l'ajout d'un client. Un client est caractérisé par les éléments suivants :
+- ID
+- Nom
+- Numéro SIREN
+- Contact
+- Email
+- Téléphone
+- Liste des restaurants
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+La liste des restaurants d'un client représente l'ensemble des adresses de la chaîne. Chaque adresse est composée de :
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Numéro & Voie
+- Code postal
+- Ville
+- Pays
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Pour des raisons techniques, l'enregistrement des restaurants en base de données ne peut pas se faire de manière synchrone avec la création du client. Afin d'optimiser le temps de réponse du point d'accès, le client est d'abord créé, puis la liste des adresses est peuplée de manière asynchrone.
 
-## Learning Laravel
+## Fonctionnalités supplémentaires
+- Ajout d'un système de logs avec Monolog
+- Rédaction de tests unitaires pour le contrôleur et le job d'ajout des restaurants
+- Gestion des erreurs et des succès avec les codes HTTP correspondants ([Wikipédia](https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP))
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Modélisation
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### UML
+**Client**
+- name: string
+- siren: string
+- contact: string
+- email: string
+- phone: string
+- Restaurants: List\<Restaurant>
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**Restaurant**
+- route: string
+- postalCode: string
+- city: string
+- country: string
 
-## Laravel Sponsors
+### MLD
+**clients**
+- **PK** id INT NOT NULL AUTOINCREMENT
+- name VARCHAR(255) NOT NULL
+- siren VARCHAR(255) NOT NULL
+- contact VARCHAR(255) NOT NULL
+- email VARCHAR(255) NOT NULL
+- phone VARCHAR(255) NOT NULL
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**restaurants**
+- **PK** id INT NOT NULL AUTOINCREMENT
+- route VARCHAR(255) NOT NULL
+- postal_code  VARCHAR(255) NOT NULL
+- city VARCHAR(255) NOT NULL
+- country VARCHAR(255) NOT NULL
+- **FK** client_id INT NOT NULL
