@@ -60,3 +60,14 @@ Pour des raisons techniques, l'enregistrement des restaurants en base de donnée
 - city VARCHAR(255) NOT NULL
 - country VARCHAR(255) NOT NULL
 - **FK** client_id INT NOT NULL
+
+## Pour lancer le projet
+1. Lancer la commande ```composer install```
+2. Lancer le serveur avec ```php artisan serve```
+3. Dans un terminal différent, lancer la commande ```php artisan queue:listen``` pour gérer la queue
+
+
+## Idées pour améliorer le projet
+- Une interface avec formulaire pour manipuler l'API
+- Utiliser autre chose que la base de données pour gérer la queue pour des raisons de performances
+- Utiliser des branches séparées plutôt que de commit directement sur la branche main
