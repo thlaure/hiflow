@@ -64,16 +64,16 @@ class AddRestaurants implements ShouldQueue
                 $restaurant->save();
                 
                 $nbRestaurantsInserted++;
-                Log::info('Added restaurant ' . $restaurant->name . ' with ID ' . $restaurant->id);
+                Log::info('Added restaurant with ID ' . $restaurant->id . ' at the following address: ' . $restaurant->route . ' ' . $restaurant->postal_code . ' ' . $restaurant->city . ', ' . $restaurant->country);
             } else {
                 $nbRestaurantsNotInserted++;
-                Log::warning('Restaurant ' . $existingRestaurant->name . ' with ID ' . $existingRestaurant->id . ' already exists');
+                Log::warning('Restaurant with ID ' . $restaurant->id . ' already exists at the following address: ' . $restaurant->route . ' ' . $restaurant->postal_code . ' ' . $restaurant->city . ', ' . $restaurant->country);
             }
         }
 
         Log::info('Added ' . $nbRestaurantsInserted . ' restaurants');
         Log::info('Skipped ' . $nbRestaurantsNotInserted . ' restaurants');
-        
+
         Log::info('Job completed: AddRestaurants');
     }
 }
