@@ -43,6 +43,8 @@ Pour des raisons techniques, l'enregistrement des restaurants en base de donnée
 - postalCode: string
 - city: string
 - country: string
+- latitude: float
+- longitude: float
 
 ### MLD
 **clients**
@@ -59,6 +61,8 @@ Pour des raisons techniques, l'enregistrement des restaurants en base de donnée
 - postal_code  VARCHAR(255) NOT NULL
 - city VARCHAR(255) NOT NULL
 - country VARCHAR(255) NOT NULL
+- latitude DECIMAL NOT NULL
+- logitude DECIMAL NOT NULL
 - **FK** client_id INT NOT NULL
 
 ## Pour lancer le projet
