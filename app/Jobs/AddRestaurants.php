@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Client;
 use App\Models\Restaurant;
 use Illuminate\Bus\Queueable;
+use maxh\Nominatim\Nominatim;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -20,8 +21,10 @@ class AddRestaurants implements ShouldQueue
 
     protected Client $client;
     protected array $restaurants;
+    protected int $nbRestaurantsInserted = 0;
+    protected int $nbRestaurantsNotInserted = 0;
 
-   /**
+    /**
      * Create a new job instance.
      *
      * @param \App\Client $client The client to whom the restaurants will be added.
@@ -65,35 +68,114 @@ class AddRestaurants implements ShouldQueue
         Log::info('Job started: AddRestaurants');
         Log::info('Adding restaurants for client ' . $this->client->name . ' with ID ' . $this->client->id);
 
-        $nbRestaurantsInserted = 0;
-        $nbRestaurantsNotInserted = 0;
-        foreach ($this->restaurants as $restaurant) {
-            // Check if the restaurant already exists
-            $existingRestaurant = Restaurant::where([
-                'client_id' => $this->client->id,
-                'route' => $restaurant['route'],
-                'postal_code' => $restaurant['postal_code'],
-                'city' => $restaurant['city'],
-                'country' => $restaurant['country'],
-            ])->first();
+        $nominatim = new Nominatim('http://nominatim.openstreetmap.org/');
 
-            if (!$existingRestaurant) {
-                // Create a new restaurant and associate it to the client
-                $restaurant = new Restaurant($restaurant);
-                $restaurant->client()->associate($this->client);
-                $restaurant->save();
-                
-                $nbRestaurantsInserted++;
-                Log::info('Added restaurant with ID ' . $restaurant->id . ' at the following address: ' . $restaurant->route . ' ' . $restaurant->postal_code . ' ' . $restaurant->city . ', ' . $restaurant->country);
-            } else {
-                $nbRestaurantsNotInserted++;
-                Log::warning('A restaurant already exists at the following address: ' . $restaurant['route'] . ' ' . $restaurant['postal_code'] . ' ' . $restaurant['city'] . ', ' . $restaurant['country']);
-            }
+        foreach ($this->restaurants as $restaurantData) {
+            $this->processRestaurant($restaurantData, $nominatim);
         }
 
-        Log::info('Added ' . $nbRestaurantsInserted . ' restaurants');
-        Log::info('Skipped ' . $nbRestaurantsNotInserted . ' restaurants');
+        Log::info('Added ' . $this->nbRestaurantsInserted . ' restaurants');
+        Log::info('Skipped ' . $this->nbRestaurantsNotInserted . ' restaurants');
 
         Log::info('Job completed: AddRestaurants');
+    }
+
+    /**
+     * Process a restaurant data, check for existence, and add if not present.
+     *
+     * @param array $restaurantData The data of the restaurant to be processed.
+     * @param Nominatim $nominatim The Nominatim instance for geocoding.
+     * 
+     * @return void
+     */
+    private function processRestaurant(array $restaurantData, Nominatim $nominatim): void
+    {
+        Log::info('Processing restaurant ' . $restaurantData['route'] . ' ' . $restaurantData['postal_code'] . ' ' . $restaurantData['city'] . ', ' . $restaurantData['country']);
+
+        $existingRestaurant = $this->findExistingRestaurant($restaurantData);
+
+        if (!$existingRestaurant) {
+            $this->processNewRestaurant($restaurantData, $nominatim);
+        } else {
+            $this->nbRestaurantsNotInserted++;
+            Log::warning('A restaurant already exists at the following address: ' . $restaurantData['route'] . ' ' . $restaurantData['postal_code'] . ' ' . $restaurantData['city'] . ', ' . $restaurantData['country']);
+        }
+    }
+
+    /**
+     * Find an existing restaurant based on its data.
+     *
+     * @param array $restaurantData The data of the restaurant to search for.
+     * 
+     * @return \App\Models\Restaurant|null
+     */
+    private function findExistingRestaurant(array $restaurantData): ?Restaurant
+    {
+        return Restaurant::where([
+            'client_id' => $this->client->id,
+            'route' => $restaurantData['route'],
+            'postal_code' => $restaurantData['postal_code'],
+            'city' => $restaurantData['city'],
+            'country' => $restaurantData['country']
+        ])->first();
+    }
+
+    /**
+     * Process a new restaurant, perform geocoding, and save it to the database.
+     *
+     * @param array $restaurantData The data of the new restaurant.
+     * @param Nominatim $nominatim The Nominatim instance for geocoding.
+     * 
+     * @return void
+     */
+    private function processNewRestaurant(array $restaurantData, Nominatim $nominatim): void
+    {
+        Log::info('Search geocoding data for ' . $restaurantData['route'] . ' ' . $restaurantData['postal_code'] . ' ' . $restaurantData['city'] . ', ' . $restaurantData['country']);
+
+        $search = $nominatim->newSearch()
+            ->country($restaurantData['country'])
+            ->city($restaurantData['city'])
+            ->postalCode($restaurantData['postal_code'])
+            ->street($restaurantData['route'])
+            ->addressDetails();
+
+        $geoData = $nominatim->find($search);
+        
+        if (!empty($geoData) && isset($geoData[0]['lat']) && isset($geoData[0]['lon'])) {
+            $latitude = $geoData[0]['lat'];
+            $longitude = $geoData[0]['lon'];
+        
+            $this->createAndSaveRestaurant($restaurantData, $latitude, $longitude);
+            $this->nbRestaurantsInserted++;
+        } else {
+            Log::warning('Geocoding data is missing latitude or longitude for ' . $restaurantData['route'] . ' ' . $restaurantData['postal_code'] . ' ' . $restaurantData['city'] . ', ' . $restaurantData['country']);
+            $this->nbRestaurantsNotInserted++;
+        }
+    }
+
+    /**
+     * Create and save a new restaurant instance.
+     *
+     * @param array $restaurantData The data of the new restaurant.
+     * @param string $latitude The latitude of the restaurant.
+     * @param string $longitude The longitude of the restaurant.
+     * 
+     * @return void
+     */
+    private function createAndSaveRestaurant(array $restaurantData, string $latitude, string $longitude): void
+    {
+        $restaurant = new Restaurant([
+            'route' => $restaurantData['route'],
+            'postal_code' => $restaurantData['postal_code'],
+            'city' => $restaurantData['city'],
+            'country' => $restaurantData['country'],
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'client_id' => $this->client->id
+        ]);
+
+        $restaurant->client()->associate($this->client);
+        $restaurant->save();
+        Log::info('Added restaurant with ID ' . $restaurant->id . ' at the following address: ' . $restaurant->route . ' ' . $restaurant->postal_code . ' ' . $restaurant->city . ', ' . $restaurant->country);
     }
 }

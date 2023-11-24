@@ -15,6 +15,8 @@ class Restaurant extends Model
         'city',
         'country',
         'client_id',
+        'latitude',
+        'longitude',
     ];
 
     public function client()
