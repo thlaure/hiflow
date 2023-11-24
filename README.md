@@ -74,9 +74,98 @@ Pourquoi ?
 
 ## Pour lancer le projet
 1. Lancer la commande ```composer install```
-2. Lancer le serveur avec ```php artisan serve```
-3. Dans un terminal différent, lancer la commande ```php artisan queue:listen``` pour gérer la queue
+2. Installer les containers avec Sail : ```./vendor/bin/sail build```
+3. Démarrer l'environnement : ```./vendor/bin/sail up```
 
+Dans un terminal différent : 
+1. Installer la base de données et déployer le schéma : ```./vendor/bin/sail php artisan migrate```
+2. Lancer la commande ```./vendor/bin/sail php artisan queue:listen``` pour gérer la queue
+3. Lancer les tests fonctionnels avec la commande ```./vendor/bin/sail php artisan test```
+
+## Pour tester
+Pour tester l'API, une [collection Postman](./Test%20Hiflow.postman_collection.json) est mise à disposition :
+```
+{
+	"info": {
+		"_postman_id": "24d49076-f642-40af-b5d5-953cb5ab355a",
+		"name": "Test Hiflow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11365470"
+	},
+	"item": [
+		{
+			"name": "Clients",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost/api/clients",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Clients",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Nom du client\",\n    \"siren\": \"123456788\",\n    \"contact\": \"Personne de contact\",\n    \"email\": \"client2@example.com\", \n    \"phone\": \"0123456789\",\n    \"restaurants\": [\n        {\n            \"route\": \"88 chemin du châtaignier\",\n            \"postal_code\": \"83260\",\n            \"city\": \"La Crau\",\n            \"country\": \"France\"\n        },\n        {\n            \"route\": \"50 chemin du châtaignier\",\n            \"postal_code\": \"83260\",\n            \"city\": \"La Crau\",\n            \"country\": \"France\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost/api/clients",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"clients"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
+``````
 
 ## Idées pour améliorer le projet
 - Une interface avec formulaire pour manipuler l'API
