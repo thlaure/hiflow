@@ -38,19 +38,19 @@ class ClientControllerTest extends TestCase
 
         $data = [
             'name' => 'Client Test',
-            'siren' => '123456789',
+            'siren' => '123456788',
             'contact' => 'John Doe',
             'email' => 'john@example.com',
             'phone' => '123-456-7890',
             'restaurants' => [
-                ['name' => 'Restaurant 1', 'route' => '123 Main St', 'postal_code' => '12345', 'city' => 'City', 'country' => 'Country'],
+                ['route' => '12 rue Hector Malot', 'postal_code' => '75012', 'city' => 'Paris', 'country' => 'France'],
             ],
         ];
 
         $response = $this->json('POST', '/api/clients', $data);
 
         $response->assertStatus(201)
-            ->assertJson(['message' => 'Customer Client Test with SIREN 123456789 added successfully. Restaurants are currently being added.']);
+            ->assertJson(['message' => 'Customer Client Test with SIREN 123456788 added successfully. Restaurants are currently being added.']);
 
         Queue::assertPushed(AddRestaurants::class, function ($job) use ($data) {
             return $job->getClient()->name === $data['name'] && count($job->getRestaurants()) === count($data['restaurants']);
@@ -74,7 +74,7 @@ class ClientControllerTest extends TestCase
             'email' => 'john@example.com',
             'phone' => '123-456-7890',
             'restaurants' => [
-                ['name' => 'Restaurant 1', 'route' => '123 Main St', 'postal_code' => '12345', 'city' => 'City', 'country' => 'Country'],
+                ['route' => '123 Main St', 'postal_code' => '12345', 'city' => 'City', 'country' => 'Country'],
             ],
         ];
 
@@ -82,5 +82,5 @@ class ClientControllerTest extends TestCase
 
         $response->assertJson(['error' => 'The siren has already been taken.'])
             ->assertStatus(422);
-        }
+    }
 }

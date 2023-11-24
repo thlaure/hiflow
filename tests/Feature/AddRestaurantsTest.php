@@ -23,7 +23,12 @@ class AddRestaurantsTest extends TestCase
     public function testHandleWithNewRestaurant(): void
     {
         $client = Client::factory()->create();
-        $restaurantData = ['route' => '123 Main St', 'postal_code' => '12345', 'city' => 'City', 'country' => 'Country'];
+        $restaurantData = [
+            'route' => '11 rue Hector Malot',
+            'postal_code' => '75012',
+            'city' => 'Paris',
+            'country' => 'France',
+        ];
 
         $job = new AddRestaurants($client, [$restaurantData]);
 
