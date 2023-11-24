@@ -24,7 +24,7 @@ Pour des raisons techniques, l'enregistrement des restaurants en base de donnée
 
 ## Fonctionnalités supplémentaires
 - Ajout d'un système de logs avec Monolog
-- Rédaction de tests unitaires pour le contrôleur et le job d'ajout des restaurants
+- Rédaction de tests fonctionnels pour le contrôleur et le job d'ajout des restaurants
 - Gestion des erreurs et des succès avec les codes HTTP correspondants ([Wikipédia](https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP))
 
 ## Modélisation
