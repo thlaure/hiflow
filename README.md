@@ -22,6 +22,13 @@ La liste des restaurants d'un client représente l'ensemble des adresses de la c
 
 Pour des raisons techniques, l'enregistrement des restaurants en base de données ne peut pas se faire de manière synchrone avec la création du client. Afin d'optimiser le temps de réponse du point d'accès, le client est d'abord créé, puis la liste des adresses est peuplée de manière asynchrone.
 
+API de geocoding choisie : [Nominatim](https://nominatim.org/release-docs/develop/api/Search/#output-details)
+
+Pourquoi ?
+- Légèreté
+- Simplicité d'utilisation
+- Pas besoin de clé API pour tester dans ce contexte 
+
 ## Fonctionnalités supplémentaires
 - Ajout d'un système de logs avec Monolog
 - Rédaction de tests fonctionnels pour le contrôleur et le job d'ajout des restaurants
